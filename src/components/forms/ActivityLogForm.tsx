@@ -11,8 +11,13 @@ import { calculateEmission } from '@/lib/emissions/calculator';
 import { getEquivalency, getAlternativeComparison } from '@/lib/emissions/equivalencies';
 import { getProfile, getCurrentUser, addActivityLog } from '@/lib/store';
 
+import TransportFields, { TransportMode, FuelType } from './activity-log/TransportFields';
+import FoodFields, { FoodType } from './activity-log/FoodFields';
+import HomeFields from './activity-log/HomeFields';
+import ConsumptionFields, { ConsumptionItem } from './activity-log/ConsumptionFields';
+
 // ---------------------------------------------------------------------------
-// Category & subcategory configuration
+// Category configurations
 // ---------------------------------------------------------------------------
 
 const CATEGORIES: { key: EmissionCategory; label: string; emoji: string }[] = [
@@ -22,59 +27,40 @@ const CATEGORIES: { key: EmissionCategory; label: string; emoji: string }[] = [
   { key: 'consumption', label: 'Purchases', emoji: '🛍️' },
 ];
 
-type TransportMode = 'car' | 'bus' | 'train' | 'bike' | 'walk' | 'flight';
+const FOOD_TYPES_LABELS: Record<FoodType, string> = {
+  beef: 'Beef meal',
+  lamb: 'Lamb meal',
+  pork: 'Pork meal',
+  chicken: 'Chicken meal',
+  fish: 'Fish meal',
+  vegetarian_meal: 'Vegetarian meal',
+  vegan_meal: 'Vegan meal',
+  eggs: 'Eggs',
+  dairy: 'Dairy',
+};
 
-const TRANSPORT_MODES: { key: TransportMode; label: string; emoji: string }[] = [
-  { key: 'car', label: 'Car', emoji: '🚗' },
-  { key: 'bus', label: 'Bus', emoji: '🚌' },
-  { key: 'train', label: 'Train', emoji: '🚆' },
-  { key: 'bike', label: 'Bike', emoji: '🚲' },
-  { key: 'walk', label: 'Walk', emoji: '🚶' },
-  { key: 'flight', label: 'Flight', emoji: '✈️' },
-];
-
-type FoodType =
-  | 'beef'
-  | 'lamb'
-  | 'pork'
-  | 'chicken'
-  | 'fish'
-  | 'vegetarian_meal'
-  | 'vegan_meal'
-  | 'eggs'
-  | 'dairy';
-
-const FOOD_TYPES: { key: FoodType; label: string }[] = [
-  { key: 'beef', label: 'Beef meal' },
-  { key: 'lamb', label: 'Lamb meal' },
-  { key: 'pork', label: 'Pork meal' },
-  { key: 'chicken', label: 'Chicken meal' },
-  { key: 'fish', label: 'Fish meal' },
-  { key: 'vegetarian_meal', label: 'Vegetarian meal' },
-  { key: 'vegan_meal', label: 'Vegan meal' },
-  { key: 'eggs', label: 'Eggs' },
-  { key: 'dairy', label: 'Dairy' },
-];
-
-type ConsumptionItem = 'smartphone' | 'laptop' | 'clothing_new' | 'clothing_secondhand';
-
-const CONSUMPTION_ITEMS: { key: ConsumptionItem; label: string }[] = [
-  { key: 'smartphone', label: 'New smartphone' },
-  { key: 'laptop', label: 'Laptop' },
-  { key: 'clothing_new', label: 'Clothing (new)' },
-  { key: 'clothing_secondhand', label: 'Clothing (secondhand)' },
-];
-
-type FuelType = 'petrol' | 'diesel' | 'hybrid' | 'ev';
+const CONSUMPTION_ITEMS_LABELS: Record<ConsumptionItem, string> = {
+  smartphone: 'New smartphone',
+  laptop: 'Laptop',
+  clothing_new: 'Clothing (new)',
+  clothing_secondhand: 'Clothing (secondhand)',
+};
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
+/**
+ * Props layout for ActivityLogForm.
+ */
 interface ActivityLogFormProps {
+  /** Flag showing if the form overlay is active. */
   isOpen: boolean;
+  /** Callback to trigger when closing the form overlay. */
   onClose: () => void;
+  /** Callback triggered when a log is successfully calculated and submitted. */
   onSubmit: (log: ActivityLog, equivalency: string, alternative: string) => void;
+  /** Render as modal overlay (default: true) or inline sheet. */
   isModal?: boolean;
 }
 
@@ -82,42 +68,50 @@ interface ActivityLogFormProps {
 // Component
 // ---------------------------------------------------------------------------
 
+/**
+ * ActivityLogForm component handles user activity logging for different categories.
+ * Orchestrates category switching, manages sub-form states, invokes calculations,
+ * and handles database/localStorage submissions.
+ *
+ * @param {ActivityLogFormProps} props - Component properties.
+ * @returns {React.ReactElement | null} The form layout, or null if not open.
+ */
 export default function ActivityLogForm({
   isOpen,
   onClose,
   onSubmit,
   isModal = true,
 }: ActivityLogFormProps) {
-  // Category
+  // Main Category state
   const [category, setCategory] = useState<EmissionCategory>('transport');
 
-  // Transport state
+  // Transport sub-form states
   const [transportMode, setTransportMode] = useState<TransportMode>('car');
   const [distance, setDistance] = useState<string>('');
   const [passengers, setPassengers] = useState<number>(1);
   const [fuelType, setFuelType] = useState<FuelType>('petrol');
   const [flightType, setFlightType] = useState<'short' | 'long'>('short');
 
-  // Food state
+  // Food sub-form states
   const [foodType, setFoodType] = useState<FoodType>('chicken');
   const [servings, setServings] = useState<number>(1);
 
-  // Home state
+  // Home Energy sub-form states
   const [homeType, setHomeType] = useState<'electricity' | 'gas_heating'>('electricity');
   const [energyAmount, setEnergyAmount] = useState<string>('');
 
-  // Consumption state
+  // Consumption sub-form states
   const [consumptionItem, setConsumptionItem] = useState<ConsumptionItem>('clothing_new');
   const [itemQuantity, setItemQuantity] = useState<number>(1);
 
-  // Common
+  // Common metadata states
   const [activityDate, setActivityDate] = useState<string>(
     new Date().toISOString().substring(0, 10),
   );
   const [description, setDescription] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Reset form on open
+  // Reset form inputs upon open triggering
   useEffect(() => {
     if (isOpen) {
       setCategory('transport');
@@ -137,7 +131,11 @@ export default function ActivityLogForm({
     }
   }, [isOpen]);
 
-  // Resolve subcategory, quantity, unit, metadata
+  /**
+   * Resolves the current sub-form inputs into a standardized database schema payload.
+   *
+   * @returns {object | null} An object mapping subcategory, quantity, units, and descriptions, or null if invalid inputs.
+   */
   const resolveActivity = useCallback((): {
     subcategory: Subcategory;
     quantity: number;
@@ -196,7 +194,7 @@ export default function ActivityLogForm({
         quantity: servings,
         unit: foodType.includes('meal') ? 'meal' : 'serving',
         metadata: {},
-        descriptionFallback: `${FOOD_TYPES.find((f) => f.key === foodType)?.label ?? foodType} × ${servings}`,
+        descriptionFallback: `${FOOD_TYPES_LABELS[foodType] ?? foodType} × ${servings}`,
       };
     }
 
@@ -218,7 +216,7 @@ export default function ActivityLogForm({
         quantity: itemQuantity,
         unit: 'item',
         metadata: {},
-        descriptionFallback: `${CONSUMPTION_ITEMS.find((c) => c.key === consumptionItem)?.label ?? consumptionItem} × ${itemQuantity}`,
+        descriptionFallback: `${CONSUMPTION_ITEMS_LABELS[consumptionItem] ?? consumptionItem} × ${itemQuantity}`,
       };
     }
 
@@ -228,6 +226,9 @@ export default function ActivityLogForm({
     foodType, servings, homeType, energyAmount, consumptionItem, itemQuantity,
   ]);
 
+  /**
+   * Commits the activity log entry to store and calculates equivalent metrics.
+   */
   const handleSubmit = useCallback(() => {
     const resolved = resolveActivity();
     if (!resolved) return;
@@ -269,7 +270,7 @@ export default function ActivityLogForm({
 
       onSubmit(activityLog, equivalency, alternative ?? '');
     } catch (error) {
-      console.error('Failed to log activity:', error);
+      console.error('[ActivityLogForm] Failed to submit log:', error);
     } finally {
       setSubmitting(false);
     }
@@ -281,444 +282,146 @@ export default function ActivityLogForm({
 
   const formBody = (
     <>
-      {/* Category selector */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '8px',
-              marginBottom: '20px',
-            }}
-          >
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.key}
-                type="button"
-                aria-pressed={category === cat.key}
-                onClick={() => setCategory(cat.key)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '12px 8px',
-                  borderRadius: 'var(--radius-md)',
-                  border:
-                    category === cat.key
-                      ? '2px solid var(--accent-green)'
-                      : '2px solid var(--border-light)',
-                  background:
-                    category === cat.key ? 'var(--accent-green-bg)' : 'var(--bg-input)',
-                  cursor: 'pointer',
-                  transition: 'all var(--transition-fast)',
-                  fontSize: '13px',
-                  fontWeight: category === cat.key ? 700 : 500,
-                  color: category === cat.key ? 'var(--accent-green-dark)' : 'var(--text-secondary)',
-                }}
-              >
-                <span style={{ fontSize: '22px' }}>{cat.emoji}</span>
-                {cat.label}
-              </button>
-            ))}
-          </div>
-
-          {/* ── Category-specific fields ────────────────────────────────── */}
-
-          {/* TRANSPORT */}
-          {category === 'transport' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Mode selector */}
-              <div>
-                <label className="input-label">Mode</label>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: '6px',
-                  }}
-                >
-                  {TRANSPORT_MODES.map((mode) => (
-                    <button
-                      key={mode.key}
-                      type="button"
-                      aria-pressed={transportMode === mode.key}
-                      onClick={() => setTransportMode(mode.key)}
-                      style={{
-                        padding: '10px 6px',
-                        borderRadius: 'var(--radius-sm)',
-                        border:
-                          transportMode === mode.key
-                            ? '2px solid var(--cat-transport)'
-                            : '1.5px solid var(--border-light)',
-                        background:
-                          transportMode === mode.key
-                            ? 'var(--accent-blue-bg)'
-                            : 'var(--bg-input)',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: transportMode === mode.key ? 700 : 500,
-                        color:
-                          transportMode === mode.key
-                            ? 'var(--cat-transport)'
-                            : 'var(--text-secondary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '4px',
-                        transition: 'all var(--transition-fast)',
-                      }}
-                    >
-                      <span>{mode.emoji}</span> {mode.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Distance */}
-              {(transportMode !== 'bike' && transportMode !== 'walk') || true ? (
-                <div>
-                  <label htmlFor="distance" className="input-label">Distance (km)</label>
-                  <input
-                    id="distance"
-                    type="number"
-                    className="input"
-                    placeholder="e.g. 25"
-                    value={distance}
-                    onChange={(e) => setDistance(e.target.value)}
-                    min={0}
-                    step={0.1}
-                  />
-                </div>
-              ) : null}
-
-              {/* Car-specific */}
-              {transportMode === 'car' && (
-                <>
-                  <div>
-                    <label htmlFor="fuel-type" className="input-label">Fuel Type</label>
-                    <select
-                      id="fuel-type"
-                      className="select"
-                      value={fuelType}
-                      onChange={(e) => setFuelType(e.target.value as FuelType)}
-                    >
-                      <option value="petrol">Petrol</option>
-                      <option value="diesel">Diesel</option>
-                      <option value="hybrid">Hybrid</option>
-                      <option value="ev">Electric (EV)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="input-label">Passengers (including you)</label>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      {[1, 2, 3, 4].map((n) => (
-                        <button
-                          key={n}
-                          type="button"
-                          aria-pressed={passengers === n}
-                          onClick={() => setPassengers(n)}
-                          style={{
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: 'var(--radius-sm)',
-                            border:
-                              passengers === n
-                                ? '2px solid var(--accent-green)'
-                                : '1.5px solid var(--border-light)',
-                            background:
-                              passengers === n
-                                ? 'var(--accent-green-bg)'
-                                : 'var(--bg-input)',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: 700,
-                            color:
-                              passengers === n
-                                ? 'var(--accent-green-dark)'
-                                : 'var(--text-secondary)',
-                            transition: 'all var(--transition-fast)',
-                          }}
-                        >
-                          {n}{n === 4 ? '+' : ''}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Flight-specific */}
-              {transportMode === 'flight' && (
-                <div>
-                  <label className="input-label">Flight Type</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {(['short', 'long'] as const).map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        aria-pressed={flightType === t}
-                        onClick={() => setFlightType(t)}
-                        style={{
-                          flex: 1,
-                          padding: '10px',
-                          borderRadius: 'var(--radius-sm)',
-                          border:
-                            flightType === t
-                              ? '2px solid var(--accent-green)'
-                              : '1.5px solid var(--border-light)',
-                          background:
-                            flightType === t
-                              ? 'var(--accent-green-bg)'
-                              : 'var(--bg-input)',
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                          fontWeight: flightType === t ? 700 : 500,
-                          color:
-                            flightType === t
-                              ? 'var(--accent-green-dark)'
-                              : 'var(--text-secondary)',
-                          transition: 'all var(--transition-fast)',
-                        }}
-                      >
-                        {t === 'short' ? 'Short-haul (<1500km)' : 'Long-haul (>1500km)'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* FOOD */}
-          {category === 'food' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label htmlFor="meal-type" className="input-label">Meal Type</label>
-                <select
-                  id="meal-type"
-                  className="select"
-                  value={foodType}
-                  onChange={(e) => setFoodType(e.target.value as FoodType)}
-                >
-                  {FOOD_TYPES.map((f) => (
-                    <option key={f.key} value={f.key}>
-                      {f.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="input-label">Servings</label>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      aria-pressed={servings === n}
-                      onClick={() => setServings(n)}
-                      style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: 'var(--radius-sm)',
-                        border:
-                          servings === n
-                            ? '2px solid var(--accent-green)'
-                            : '1.5px solid var(--border-light)',
-                        background:
-                          servings === n ? 'var(--accent-green-bg)' : 'var(--bg-input)',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        color:
-                          servings === n
-                            ? 'var(--accent-green-dark)'
-                            : 'var(--text-secondary)',
-                        transition: 'all var(--transition-fast)',
-                      }}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* HOME */}
-          {category === 'home' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label className="input-label">Type</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {([
-                    { key: 'electricity' as const, label: '⚡ Electricity' },
-                    { key: 'gas_heating' as const, label: '🔥 Gas Heating' },
-                  ]).map((h) => (
-                    <button
-                      key={h.key}
-                      type="button"
-                      aria-pressed={homeType === h.key}
-                      onClick={() => setHomeType(h.key)}
-                      style={{
-                        flex: 1,
-                        padding: '12px',
-                        borderRadius: 'var(--radius-sm)',
-                        border:
-                          homeType === h.key
-                            ? '2px solid var(--cat-home)'
-                            : '1.5px solid var(--border-light)',
-                        background:
-                          homeType === h.key
-                            ? 'var(--accent-purple-bg)'
-                            : 'var(--bg-input)',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: homeType === h.key ? 700 : 500,
-                        color:
-                          homeType === h.key
-                            ? 'var(--cat-home)'
-                            : 'var(--text-secondary)',
-                        transition: 'all var(--transition-fast)',
-                      }}
-                    >
-                      {h.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label htmlFor="energy-amount" className="input-label">Amount (kWh)</label>
-                <input
-                  id="energy-amount"
-                  type="number"
-                  className="input"
-                  placeholder="e.g. 50"
-                  value={energyAmount}
-                  onChange={(e) => setEnergyAmount(e.target.value)}
-                  min={0}
-                  step={0.1}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* CONSUMPTION */}
-          {category === 'consumption' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label htmlFor="consumption-item" className="input-label">Item</label>
-                <select
-                  id="consumption-item"
-                  className="select"
-                  value={consumptionItem}
-                  onChange={(e) => setConsumptionItem(e.target.value as ConsumptionItem)}
-                >
-                  {CONSUMPTION_ITEMS.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="input-label">Quantity</label>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      aria-pressed={itemQuantity === n}
-                      onClick={() => setItemQuantity(n)}
-                      style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: 'var(--radius-sm)',
-                        border:
-                          itemQuantity === n
-                            ? '2px solid var(--accent-green)'
-                            : '1.5px solid var(--border-light)',
-                        background:
-                          itemQuantity === n
-                            ? 'var(--accent-green-bg)'
-                            : 'var(--bg-input)',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        color:
-                          itemQuantity === n
-                            ? 'var(--accent-green-dark)'
-                            : 'var(--text-secondary)',
-                        transition: 'all var(--transition-fast)',
-                      }}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Common fields ────────────────────────────────────────── */}
-          <div
+      {/* Category Navigation Tabs */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '8px',
+          marginBottom: '20px',
+        }}
+      >
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat.key}
+            type="button"
+            aria-pressed={category === cat.key}
+            onClick={() => setCategory(cat.key)}
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '14px',
-              marginTop: '20px',
-              paddingTop: '16px',
-              borderTop: '1px solid var(--border-light)',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '12px 8px',
+              borderRadius: 'var(--radius-md)',
+              border:
+                category === cat.key
+                  ? '2px solid var(--accent-green)'
+                  : '2px solid var(--border-light)',
+              background:
+                category === cat.key ? 'var(--accent-green-bg)' : 'var(--bg-input)',
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+              fontSize: '13px',
+              fontWeight: category === cat.key ? 700 : 500,
+              color: category === cat.key ? 'var(--accent-green-dark)' : 'var(--text-secondary)',
             }}
           >
-            <div>
-              <label htmlFor="activity-date" className="input-label">Activity Date</label>
-              <input
-                id="activity-date"
-                type="date"
-                className="input"
-                value={activityDate}
-                onChange={(e) => setActivityDate(e.target.value)}
-                max={new Date().toISOString().substring(0, 10)}
-              />
-            </div>
-            <div>
-              <label htmlFor="activity-description" className="input-label">Description (optional)</label>
-              <input
-                id="activity-description"
-                type="text"
-                className="input"
-                placeholder="e.g. Morning commute to office"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                maxLength={120}
-              />
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            className="btn btn-primary btn-lg"
-            style={{ width: '100%', marginTop: '20px' }}
-            disabled={!isValid || submitting}
-            onClick={handleSubmit}
-          >
-            {submitting ? 'Calculating…' : '📊 Log Activity'}
+            <span style={{ fontSize: '22px' }}>{cat.emoji}</span>
+            {cat.label}
           </button>
+        ))}
+      </div>
+
+      {/* Render Category specific forms dynamically */}
+      {category === 'transport' && (
+        <TransportFields
+          transportMode={transportMode}
+          setTransportMode={setTransportMode}
+          distance={distance}
+          setDistance={setDistance}
+          passengers={passengers}
+          setPassengers={setPassengers}
+          fuelType={fuelType}
+          setFuelType={setFuelType}
+          flightType={flightType}
+          setFlightType={setFlightType}
+        />
+      )}
+
+      {category === 'food' && (
+        <FoodFields
+          foodType={foodType}
+          setFoodType={setFoodType}
+          servings={servings}
+          setServings={setServings}
+        />
+      )}
+
+      {category === 'home' && (
+        <HomeFields
+          homeType={homeType}
+          setHomeType={setHomeType}
+          energyAmount={energyAmount}
+          setEnergyAmount={setEnergyAmount}
+        />
+      )}
+
+      {category === 'consumption' && (
+        <ConsumptionFields
+          consumptionItem={consumptionItem}
+          setConsumptionItem={setConsumptionItem}
+          itemQuantity={itemQuantity}
+          setItemQuantity={setItemQuantity}
+        />
+      )}
+
+      {/* Common Meta Inputs */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          marginTop: '20px',
+          paddingTop: '16px',
+          borderTop: '1px solid var(--border-light)',
+        }}
+      >
+        <div>
+          <label htmlFor="activity-date" className="input-label">Activity Date</label>
+          <input
+            id="activity-date"
+            type="date"
+            className="input"
+            value={activityDate}
+            onChange={(e) => setActivityDate(e.target.value)}
+            max={new Date().toISOString().substring(0, 10)}
+          />
+        </div>
+        <div>
+          <label htmlFor="activity-description" className="input-label">Description (optional)</label>
+          <input
+            id="activity-description"
+            type="text"
+            className="input"
+            placeholder="e.g. Morning commute to office"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            maxLength={120}
+          />
+        </div>
+      </div>
+
+      {/* Submission Button */}
+      <button
+        className="btn btn-primary btn-lg"
+        style={{ width: '100%', marginTop: '20px' }}
+        disabled={!isValid || submitting}
+        onClick={handleSubmit}
+      >
+        {submitting ? 'Calculating…' : '📊 Log Activity'}
+      </button>
     </>
   );
 
   if (!isModal) {
-    return (
-      <div style={{ width: '100%' }}>
-        {formBody}
-      </div>
-    );
+    return <div style={{ width: '100%' }}>{formBody}</div>;
   }
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
+        {/* Header bar */}
         <div
           style={{
             display: 'flex',
@@ -743,9 +446,7 @@ export default function ActivityLogForm({
           </button>
         </div>
 
-        <div style={{ padding: '20px 24px 24px' }}>
-          {formBody}
-        </div>
+        <div style={{ padding: '20px 24px 24px' }}>{formBody}</div>
       </div>
     </div>
   );

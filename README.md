@@ -1,4 +1,4 @@
-# Imprint — Know Your Impact. Change It.
+# Imprint — Carbon Footprint Platform
 
 [![Next.js 16](https://img.shields.io/badge/Framework-Next.js%2016-green?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -15,11 +15,14 @@
 2. [Key Differentiators](#key-differentiators)
 3. [System Architecture](#system-architecture)
 4. [Feature Breakdown](#feature-breakdown)
-5. [Calculation Methodology & Sources](#calculation-methodology--sources)
-6. [Quality Assurance & Compliance](#quality-assurance--compliance)
-7. [Running Locally](#running-locally)
-8. [Deployment Guide](#deployment-guide)
-9. [Security & Privacy](#security--privacy)
+5. [API Reference & Core Modules](#api-reference--core-modules)
+6. [Calculation Methodology & Sources](#calculation-methodology--sources)
+7. [Screenshots & User Interface Guide](#screenshots--user-interface-guide)
+8. [Quality Assurance & A11y Compliance](#quality-assurance--a11y-compliance)
+9. [Installation & Setup](#installation--setup)
+10. [Deployment Guide](#deployment-guide)
+11. [Contribution Guidelines](#contribution-guidelines)
+12. [Security & Privacy](#security--privacy)
 
 ---
 
@@ -85,7 +88,7 @@ Calculates and prioritizes recommendations based on your profile and logged data
 ### 5. AI Weekly Digest (F5)
 A warm, encouraging, plain-English summary of your weekly habits, progress, and opportunities, modeled on Claude AI's tone guidelines.
 
-### 6. Goal Tracking & Progress Trajectory (F6)
+### 6. Goal Setting & Progress Trajectory (F6)
 Allows users to set target reductions (e.g., *"Reduce carbon by 20% in 3 months"*). The system projects trajectory based on actual logged entries.
 
 ### 7. Supabase Auth & Cloud Profiles (F7)
@@ -114,6 +117,70 @@ A curated marketplace linking users to verified carbon offsets (Gold Standard, V
 
 ---
 
+## API Reference & Core Modules
+
+### 1. Unified Storage System (`src/lib/store.ts`)
+
+The data store is modularized into single-responsibility sub-modules located in `src/lib/store/`.
+
+#### Core Accessors (`src/lib/store/core.ts`)
+* `isBrowser(): boolean`
+  Checks if the execution environment is a client browser.
+* `getItem<T>(key: string): T | null`
+  Retrieves and parses a JSON-serialized item from localStorage.
+* `setItem<T>(key: string, value: T): void`
+  Serializes and writes an item to localStorage.
+* `generateId(): string`
+  Generates a unique base-36 string identifier.
+
+#### User Session API (`src/lib/store/user.ts`)
+* `getCurrentUser(): User | null`
+  Retrieves the active user session.
+* `setCurrentUser(user: User): void`
+  Persists a user session in localStorage.
+* `getUserByEmail(email: string): User | null`
+  Queries users list by email address.
+* `createUser(displayName: string, email: string): User`
+  Creates a new user account profile.
+* `updateUser(updates: Partial<User> & { id: string }): User | null`
+  Updates user parameters.
+* `logout(): void`
+  Terminates session.
+
+#### Activity Logs API (`src/lib/store/activity.ts`)
+* `addActivityLog(log: Omit<ActivityLog, 'id' | 'created_at'>): ActivityLog`
+  Registers a new activity log entry.
+* `getActivityLogs(filters: ActivityLogFilters): ActivityLog[]`
+  Queries sorted list of activities matching specified filters.
+* `deleteActivityLog(id: string): boolean`
+  Removes an activity log entry.
+* `getActivitySummary(start: string, end: string, userId?: string): ActivitySummary`
+  Aggregates activity logs into total kilograms, category breakdowns, and daily averages.
+
+#### Streak Calculation API (`src/lib/store/streaks.ts`)
+* `getStreakCount(userId?: string): number`
+  Calculates consecutive logging days. Streaks remain active if logged today or yesterday.
+
+---
+
+### 2. Emissions Calculation Engine (`src/lib/emissions/calculator.ts`)
+
+The emissions engine calculates the carbon footprint of individual activities using verified conversion factors.
+
+* `calculateEmission(subcategory: Subcategory, quantity: number, unit: string, metadata: Record<string, any>, regionCode: string): EmissionResult`
+  Computes greenhouse gas footprint in kilograms ($kg\ CO_2e$) based on active conversions:
+  - **Transport modes**: adjusts based on vehicle fuel types (petrol, diesel, hybrid, electric) and divides emissions among passenger occupants.
+  - **Electricity grids**: dynamically adapts to regional carbon intensity factors (e.g., using Indian CEA grid factors for `IN-TG`).
+  
+  **Parameters:**
+  - `subcategory` (Subcategory): The targeted activity sub-classification (e.g., `petrol_car`, `beef`, `electricity`).
+  - `quantity` (number): Numeric measure of the activity (distance in km, servings, kWh).
+  - `unit` (string): Unit representation (`km`, `serving`, `kWh`, `item`).
+  - `metadata` (Record<string, any>): Additional factors such as passenger occupant count.
+  - `regionCode` (string): ISO region mapping for localized grid coefficients.
+
+---
+
 ## Calculation Methodology & Sources
 
 Imprint uses a strict **activity quantity × emission factor** formula, citing peer-reviewed carbon accounting datasets.
@@ -139,7 +206,33 @@ All emission factors, conversions, and references are declared in [factors.json]
 
 ---
 
-## Quality Assurance & Compliance
+## Screenshots & User Interface Guide
+
+### 1. Emission Category Dashboard
+An animated visual layout presenting your monthly footprint breakdown.
+- **Top Card**: Dark-green gradient card displaying your total $kg\ CO_2e$ for the current month and percentage comparisons.
+- **Ring Chart**: Dynamic category breakdown (Transport in Blue, Food in Amber, Home in Purple, Purchases in Coral).
+- **KPI Grid**: Highlights your annual projection against the 1.5°C target line alongside your active logging streak count.
+
+### 2. Smart Activity Log Modal
+A modular bottom sheet/dialog triggered from the floating action button.
+- **Category Tabs**: Switch between Transport, Food, Home, and Purchases.
+- **Inputs**: Adjust sliders, steppers, and type inputs specific to each category.
+- **Confirmation overlay**: Shows equivalents (e.g. *"That beef meal added 6.6 kg — equivalent to planting 0.3 trees"*) upon logging.
+
+### 3. Recommendations & Matrix View
+Renders the complete set of reduction recommendations.
+- **Impact Matrix**: Interactive scatter plot categorizing actions into "Quick Wins", "High Impact", and "Hard Choices".
+- **Action Cards**: Lists ranked suggestions with expandable tabs showing tips and co-benefits.
+
+### 4. Goals and Achievements
+Gamification panels displaying milestones.
+- **Goals Panel**: Track active targets against progress bars.
+- **Achievements**: Unlock Bronze, Silver, Gold, and Platinum badges celebrating your tracking consistency.
+
+---
+
+## Quality Assurance & A11y Compliance
 
 Imprint maintains strict software development and quality standards:
 
@@ -153,13 +246,13 @@ Imprint maintains strict software development and quality standards:
 
 ---
 
-## Running Locally
+## Installation & Setup
 
 ### Prerequisites
 - Node.js 18+
 - npm
 
-### Installation
+### Installation Steps
 1. Clone the repository:
    ```bash
    git clone https://github.com/pranav-cholleti/Carbon-FootPrint.git
@@ -174,6 +267,16 @@ Imprint maintains strict software development and quality standards:
    npm run dev
    ```
 4. Access the application at [http://localhost:3000](http://localhost:3000).
+
+### Running Tests
+To execute the test suite and verify coverage locally:
+```bash
+# Run Vitest suite once
+npm run test
+
+# Run tests in watch mode
+npx vitest
+```
 
 ### Demo Account
 Click "Use Demo Account" on the login screen, or log in with:
@@ -233,6 +336,29 @@ CREATE TABLE public.activity_logs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 ```
+
+---
+
+## Contribution Guidelines
+
+We welcome contributions to the Imprint platform. Please adhere to the following standards:
+
+### 1. Code Modularity & File Size Limits
+- **Keep files focused**: No single source code file should exceed **300 lines**.
+- If a file grows beyond 300 lines, split it by extracting logic into helpers, sub-components, or utility files under appropriate folders.
+
+### 2. Documentation Standards
+- Every exported function, interface, React component, or custom hook **must have a JSDoc comment** detailing parameters, return types, and exceptions.
+- Add descriptive inline comments to explain complex mathematical logic, conversion coefficients, and side effects.
+
+### 3. Accessibility (A11y) checklist
+- Ensure all interactive elements have descriptive `aria-label` tags.
+- Links representing the active page must use `aria-current="page"`.
+- All form inputs must have associated `<label>` tags with matching `htmlFor` and `id` bindings.
+
+### 4. Git Workflow
+- Ensure `npm run lint` yields **0 errors and 0 warnings** before staging.
+- Ensure all tests pass via `npm run test` before creating a pull request.
 
 ---
 

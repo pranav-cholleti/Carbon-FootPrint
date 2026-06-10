@@ -2,27 +2,26 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
+import type { Action } from '@/types/domain';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export interface ActionData {
-  id: string;
-  title: string;
-  description: string;
-  category: 'transport' | 'food' | 'home' | 'consumption';
-  base_impact_kg_month: number;
-  effort_score: 1 | 2 | 3 | 4 | 5;
-  tips: string[];
-  icon?: string;
-}
-
+/**
+ * Representation of the user status for a recommendation action.
+ */
 export type ActionStatus = 'saved' | 'doing' | 'completed' | 'dismissed' | null;
 
+/**
+ * Props expected by the ActionCard component.
+ */
 interface ActionCardProps {
-  action: ActionData;
+  /** The action recommendation details. */
+  action: Action;
+  /** The user's active status for this recommendation. */
   status: ActionStatus;
+  /** Callback to trigger when the user changes status. */
   onStatusChange: (actionId: string, newStatus: ActionStatus) => void;
 }
 
@@ -63,6 +62,13 @@ const EFFORT_CONFIG: Record<number, { label: string; color: string; bg: string }
 // Component
 // ---------------------------------------------------------------------------
 
+/**
+ * ActionCard component renders a single recommendation action card with category icons,
+ * carbon savings progress bar, status toggle buttons, and expandable tip list.
+ *
+ * @param {ActionCardProps} props - Component properties.
+ * @returns {React.ReactElement} The rendered ActionCard component.
+ */
 export default function ActionCard({ action, status, onStatusChange }: ActionCardProps) {
   const [showTips, setShowTips] = useState(false);
   const catColor = CATEGORY_COLORS[action.category];

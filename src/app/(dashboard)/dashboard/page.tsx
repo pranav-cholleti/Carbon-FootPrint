@@ -2,19 +2,15 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import {
-  Plus,
-  TrendingDown,
-  TrendingUp,
-  Flame,
-  ArrowRight,
-  Leaf,
-  Users,
-} from 'lucide-react';
-import EmissionRingChart from '@/components/charts/EmissionRingChart';
+import dynamic from 'next/dynamic';
+import { Plus, Flame, Users } from 'lucide-react';
+
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import MonthlyHeroCard from '@/components/dashboard/MonthlyHeroCard';
+import QuickActionsList from '@/components/dashboard/QuickActionsList';
 import ActivityLogForm from '@/components/forms/ActivityLogForm';
 import ActivityResultCard from '@/components/cards/ActivityResultCard';
+
 import {
   getCurrentUser,
   getProfile,
@@ -24,10 +20,23 @@ import {
 } from '@/lib/store';
 import type { ActivityLog, EmissionBreakdown } from '@/types/domain';
 
-// ---------------------------------------------------------------------------
-// Helper
-// ---------------------------------------------------------------------------
+// Dynamically import the Recharts-based chart with SSR disabled to optimize page loads and prevent hydration errors
+const EmissionRingChart = dynamic(() => import('@/components/charts/EmissionRingChart'), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="skeleton"
+      style={{ width: '100%', height: '260px', borderRadius: 'var(--radius-md)' }}
+    />
+  ),
+});
 
+/**
+ * Calculates start and end ISO strings representing a month range relative to the current date.
+ *
+ * @param {number} [offset=0] - Month offset (e.g. -1 for previous month).
+ * @returns {object} An object containing start and end ISO strings.
+ */
 function getMonthRange(offset: number = 0): { start: string; end: string } {
   const now = new Date();
   const year = now.getFullYear();
@@ -40,35 +49,31 @@ function getMonthRange(offset: number = 0): { start: string; end: string } {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Skeleton components
-// ---------------------------------------------------------------------------
-
-function SkeletonBlock({ width, height }: { width: string; height: string }) {
+/**
+ * Renders a loading block skeleton for the dashboard shell.
+ *
+ * @returns {React.ReactElement} The loading skeleton.
+ */
+function DashboardSkeleton() {
+  const skeletonStyle = { borderRadius: 'var(--radius-md)', background: 'var(--border-light)' };
   return (
     <div
-      className="skeleton"
-      style={{ width, height, borderRadius: 'var(--radius-md)' }}
-    />
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <SkeletonBlock width="60%" height="28px" />
-      <SkeletonBlock width="100%" height="320px" />
+      className="animate-fade-in"
+      style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+    >
+      <div className="skeleton" style={{ width: '60%', height: '28px', ...skeletonStyle }} />
+      <div className="skeleton" style={{ width: '100%', height: '320px', ...skeletonStyle }} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <SkeletonBlock width="100%" height="120px" />
-        <SkeletonBlock width="100%" height="120px" />
+        <div className="skeleton" style={{ width: '100%', height: '120px', ...skeletonStyle }} />
+        <div className="skeleton" style={{ width: '100%', height: '120px', ...skeletonStyle }} />
       </div>
-      <SkeletonBlock width="100%" height="200px" />
+      <div className="skeleton" style={{ width: '100%', height: '200px', ...skeletonStyle }} />
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Static action recommendations
+// Static top recommendations for short summary panel
 // ---------------------------------------------------------------------------
 
 const TOP_ACTIONS = [
@@ -92,10 +97,15 @@ const TOP_ACTIONS = [
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Main Component
-// ---------------------------------------------------------------------------
+const TARGET_TONNES = 2.3; // 1.5°C pathway target
 
+/**
+ * DashboardPage component represents the primary authenticated landing dashboard view.
+ * Coordinates data fetching, monthly aggregation summaries, streak counting,
+ * and handles opening log modals and displaying log results.
+ *
+ * @returns {React.ReactElement} The dashboard layout view.
+ */
 export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -107,7 +117,7 @@ export default function DashboardPage() {
     alternative: string;
   } | null>(null);
 
-  // Data
+  // Aggregated data states
   const [currentBreakdown, setCurrentBreakdown] = useState<EmissionBreakdown>({
     transport: 0,
     food: 0,
@@ -120,7 +130,9 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState('');
   const [regionLabel, setRegionLabel] = useState('your region');
 
-  // Load data
+  /**
+   * Initializes seed data and loads all dashboard storage states.
+   */
   const loadData = useCallback(() => {
     initializeSeedData();
 
@@ -151,18 +163,18 @@ export default function DashboardPage() {
       setRegionLabel(regionMap[profile.region_code] ?? profile.region_code);
     }
 
-    // Current month summary
+    // Load current month metrics
     const thisMonth = getMonthRange(0);
     const summary = getActivitySummary(thisMonth.start, thisMonth.end);
     setCurrentBreakdown(summary.breakdown);
     setCurrentTotal(summary.total_co2e_kg);
 
-    // Last month summary
+    // Load previous month metrics
     const lastMonth = getMonthRange(-1);
     const lastSummary = getActivitySummary(lastMonth.start, lastMonth.end);
     setLastMonthTotal(lastSummary.total_co2e_kg);
 
-    // Streak
+    // Load logging streak
     setStreak(getStreakCount());
 
     setLoading(false);
@@ -173,12 +185,12 @@ export default function DashboardPage() {
     loadData();
   }, [loadData]);
 
+  // Read URL query parameters to trigger the Activity Log form modal on redirects
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('log') === 'true') {
         setShowLogForm(true);
-        // Clear the query parameter so reloading doesn't keep opening it
         const newUrl = window.location.pathname;
         window.history.replaceState({ path: newUrl }, '', newUrl);
       }
@@ -192,26 +204,28 @@ export default function DashboardPage() {
   }, [currentTotal, lastMonthTotal]);
 
   const annualProjection = useMemo(() => {
-    return (currentTotal * 12) / 1000; // tonnes
+    return (currentTotal * 12) / 1000;
   }, [currentTotal]);
 
-  const TARGET_TONNES = 2.3; // 1.5°C pathway
-
+  /**
+   * Callback fired when the ActivityLogForm registers a new entry.
+   */
   const handleFormSubmit = useCallback(
     (log: ActivityLog, equivalency: string, alternative: string) => {
       setShowLogForm(false);
       setResultLog({ activity: log, equivalency, alternative });
-      // Reload data
       loadData();
     },
-    [loadData],
+    [loadData]
   );
 
+  /**
+   * Callback fired to close the activity success card.
+   */
   const closeResult = useCallback(() => {
     setResultLog(null);
   }, []);
 
-  // Loading skeleton
   if (loading) {
     return <DashboardSkeleton />;
   }
@@ -221,84 +235,20 @@ export default function DashboardPage() {
       className={mounted ? 'animate-fade-in' : 'opacity-0'}
       style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
     >
-      {/* ── Greeting & Monthly Total ─────────────────────────────── */}
-      <div>
-        <h1
-          style={{
-            fontSize: '24px',
-            fontWeight: 800,
-            color: 'var(--text-primary)',
-            marginBottom: '4px',
-          }}
-        >
-          Hi {userName} 👋
-        </h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0 }}>
-          Here&apos;s your carbon footprint this month
-        </p>
-      </div>
+      {/* Dashboard Greeting Header */}
+      <DashboardHeader userName={userName} />
 
-      {/* ── Monthly Total Hero Card ─────────────────────────────── */}
-      <div
-        className="card"
-        style={{
-          padding: '24px',
-          background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 50%, #40916C 100%)',
-          border: 'none',
-          color: 'white',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 500, opacity: 0.8 }}>
-            This month&apos;s footprint
-          </span>
-          {changePct !== 0 && (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '3px 10px',
-                borderRadius: 'var(--radius-full)',
-                background: changePct < 0 ? 'rgba(216,243,220,0.2)' : 'rgba(255,200,200,0.2)',
-                fontSize: '12px',
-                fontWeight: 700,
-              }}
-            >
-              {changePct < 0 ? (
-                <TrendingDown style={{ width: '14px', height: '14px' }} />
-              ) : (
-                <TrendingUp style={{ width: '14px', height: '14px' }} />
-              )}
-              {Math.abs(changePct)}% vs last month
-            </div>
-          )}
-        </div>
-        <div
-          style={{
-            fontSize: '42px',
-            fontWeight: 800,
-            fontFamily: 'var(--font-mono)',
-            lineHeight: 1.1,
-          }}
-        >
-          {currentTotal < 100
-            ? currentTotal.toFixed(1)
-            : Math.round(currentTotal).toLocaleString()}
-          <span style={{ fontSize: '16px', fontWeight: 500, opacity: 0.7, marginLeft: '6px' }}>
-            kg CO₂e
-          </span>
-        </div>
-      </div>
+      {/* Monthly Hero Emissions Summary Card */}
+      <MonthlyHeroCard currentTotal={currentTotal} changePct={changePct} />
 
-      {/* ── Ring Chart ────────────────────────────────────────────── */}
+      {/* Category Breakdown Animated Ring Chart */}
       <div className="card" style={{ padding: '24px' }}>
         <h2
           style={{
             fontSize: '15px',
             fontWeight: 700,
             color: 'var(--text-primary)',
-            marginBottom: '16px',
+            margin: '0 0 16px',
           }}
         >
           Breakdown by category
@@ -306,22 +256,23 @@ export default function DashboardPage() {
         <EmissionRingChart data={currentBreakdown} />
       </div>
 
-      {/* ── Stats Row ────────────────────────────────────────────── */}
+      {/* Numerical Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        {/* Annual Projection */}
+        {/* Annual Projection Comparison */}
         <div className="card" style={{ padding: '16px' }}>
-          <div
+          <span
             style={{
               fontSize: '12px',
               fontWeight: 600,
               color: 'var(--text-secondary)',
               textTransform: 'uppercase',
               letterSpacing: '0.03em',
+              display: 'block',
               marginBottom: '8px',
             }}
           >
             Annual Projection
-          </div>
+          </span>
           <div
             style={{
               fontSize: '26px',
@@ -343,7 +294,6 @@ export default function DashboardPage() {
               tonnes
             </span>
           </div>
-          {/* Target line */}
           <div style={{ marginTop: '12px' }}>
             <div
               style={{
@@ -373,27 +323,22 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Streak */}
+        {/* Logging Streaks Flame badge */}
         <div className="card" style={{ padding: '16px' }}>
-          <div
+          <span
             style={{
               fontSize: '12px',
               fontWeight: 600,
               color: 'var(--text-secondary)',
               textTransform: 'uppercase',
               letterSpacing: '0.03em',
+              display: 'block',
               marginBottom: '8px',
             }}
           >
             Logging Streak
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Flame
               style={{
                 width: '28px',
@@ -411,20 +356,12 @@ export default function DashboardPage() {
             >
               {streak}
             </span>
-            <span
-              style={{
-                fontSize: '13px',
-                color: 'var(--text-secondary)',
-              }}
-            >
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
               {streak === 1 ? 'day' : 'days'}
             </span>
           </div>
           {streak > 0 ? (
-            <div
-              className="badge badge-amber"
-              style={{ marginTop: '10px', fontSize: '11px' }}
-            >
+            <div className="badge badge-amber" style={{ marginTop: '10px', fontSize: '11px' }}>
               🔥 {streak >= 7 ? 'On fire!' : 'Keep it up!'}
             </div>
           ) : (
@@ -441,92 +378,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Top Actions ──────────────────────────────────────────── */}
-      <div className="card" style={{ padding: '20px' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '14px',
-          }}
-        >
-          <h2
-            style={{
-              fontSize: '15px',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
-              margin: 0,
-            }}
-          >
-            <Leaf
-              style={{
-                width: '16px',
-                height: '16px',
-                display: 'inline',
-                verticalAlign: 'middle',
-                marginRight: '6px',
-                color: 'var(--accent-green)',
-              }}
-            />
-            Top Actions for You
-          </h2>
-          <Link
-            href="/actions"
-            style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              color: 'var(--accent-green)',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '2px',
-            }}
-          >
-            See all <ArrowRight style={{ width: '12px', height: '12px' }} />
-          </Link>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {TOP_ACTIONS.map((action, i) => (
-            <div
-              key={i}
-              className="card-interactive"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--bg-elevated)',
-                cursor: 'pointer',
-                border: 'none',
-                boxShadow: 'none',
-                transition: 'background var(--transition-fast)',
-              }}
-            >
-              <span style={{ fontSize: '20px' }}>{action.icon}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  {action.title}
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  Saves ~{action.save}
-                </div>
-              </div>
-              <ArrowRight
-                style={{ width: '16px', height: '16px', color: 'var(--text-tertiary)' }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Top action list recommendations panel */}
+      <QuickActionsList topActions={TOP_ACTIONS} />
 
-      {/* ── Regional Comparison ────────────────────────────────────── */}
+      {/* Cohort comparison comparison stats bar */}
       <div className="card" style={{ padding: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-          <Users
-            style={{ width: '16px', height: '16px', color: 'var(--accent-purple)' }}
-          />
+          <Users style={{ width: '16px', height: '16px', color: 'var(--accent-purple)' }} />
           <h2
             style={{
               fontSize: '15px',
@@ -539,7 +397,6 @@ export default function DashboardPage() {
           </h2>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {/* Your bar */}
           <div>
             <div
               style={{
@@ -551,7 +408,11 @@ export default function DashboardPage() {
             >
               <span style={{ fontWeight: 600, color: 'var(--accent-green)' }}>You</span>
               <span
-                style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--text-primary)' }}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                }}
               >
                 {currentTotal < 100 ? currentTotal.toFixed(1) : Math.round(currentTotal)} kg
               </span>
@@ -566,7 +427,6 @@ export default function DashboardPage() {
               />
             </div>
           </div>
-          {/* Regional average bar */}
           <div>
             <div
               style={{
@@ -577,9 +437,7 @@ export default function DashboardPage() {
               }}
             >
               <span style={{ color: 'var(--text-tertiary)' }}>Regional average</span>
-              <span
-                style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}
-              >
+              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>
                 ~380 kg
               </span>
             </div>
@@ -596,16 +454,13 @@ export default function DashboardPage() {
           </div>
         </div>
         {currentTotal < 380 && (
-          <div
-            className="badge badge-green"
-            style={{ marginTop: '12px', fontSize: '11px' }}
-          >
+          <div className="badge badge-green" style={{ marginTop: '12px', fontSize: '11px' }}>
             🎉 {Math.round(((380 - currentTotal) / 380) * 100)}% below average — great job!
           </div>
         )}
       </div>
 
-      {/* ── FAB ──────────────────────────────────────────────────── */}
+      {/* Floating Action Button for Logging */}
       <button
         className="fab animate-scale-in"
         onClick={() => setShowLogForm(true)}
@@ -614,14 +469,14 @@ export default function DashboardPage() {
         <Plus style={{ width: '24px', height: '24px' }} />
       </button>
 
-      {/* ── Activity Log Form Modal ──────────────────────────────── */}
+      {/* Log Form modal overlay */}
       <ActivityLogForm
         isOpen={showLogForm}
         onClose={() => setShowLogForm(false)}
         onSubmit={handleFormSubmit}
       />
 
-      {/* ── Activity Result Overlay ──────────────────────────────── */}
+      {/* Result badge popup */}
       {resultLog && (
         <div className="modal-overlay" onClick={closeResult}>
           <div onClick={(e) => e.stopPropagation()}>
