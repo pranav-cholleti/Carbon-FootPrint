@@ -1,0 +1,234 @@
+{
+  "transport": {
+    "petrol_car": {
+      "factor": 0.170,
+      "unit": "kg CO2e per km",
+      "source": "UK BEIS 2023 — average medium petrol car",
+      "notes": "Includes well-to-tank and tank-to-wheel emissions. For carpooling, divide by passenger count."
+    },
+    "diesel_car": {
+      "factor": 0.163,
+      "unit": "kg CO2e per km",
+      "source": "UK BEIS 2023 — average medium diesel car",
+      "notes": "Diesel has lower CO2 per km but higher NOx. Divide by passengers for carpooling."
+    },
+    "hybrid_car": {
+      "factor": 0.105,
+      "unit": "kg CO2e per km",
+      "source": "UK BEIS 2023 — average hybrid car",
+      "notes": "Combines electric and petrol drivetrain. Actual emissions vary with driving style."
+    },
+    "ev": {
+      "factor": 0.053,
+      "unit": "kg CO2e per km",
+      "source": "UK BEIS 2023 — battery electric vehicle (UK grid average)",
+      "notes": "Grid-dependent. Adjust by region using grid_factors. Includes manufacturing amortization."
+    },
+    "bus": {
+      "factor": 0.089,
+      "unit": "kg CO2e per km",
+      "source": "UK BEIS 2023 — average local bus (per passenger)",
+      "notes": "Per passenger-km. Varies with occupancy rate."
+    },
+    "train": {
+      "factor": 0.041,
+      "unit": "kg CO2e per km",
+      "source": "UK BEIS 2023 — national rail (per passenger)",
+      "notes": "Per passenger-km. Electric trains lower; diesel trains higher."
+    },
+    "flight_short": {
+      "factor": 0.255,
+      "unit": "kg CO2e per km",
+      "source": "UK BEIS 2023 — domestic/short-haul economy class",
+      "notes": "Includes radiative forcing multiplier. Short-haul defined as <3,700 km."
+    },
+    "flight_long": {
+      "factor": 0.195,
+      "unit": "kg CO2e per km",
+      "source": "UK BEIS 2023 — long-haul economy class",
+      "notes": "Includes radiative forcing multiplier. Long-haul >3,700 km. More fuel-efficient per km than short-haul."
+    },
+    "walk_cycle": {
+      "factor": 0,
+      "unit": "kg CO2e per km",
+      "source": "N/A — zero direct emissions",
+      "notes": "Walking and cycling produce zero direct carbon emissions."
+    }
+  },
+  "food": {
+    "beef": {
+      "factor": 6.6,
+      "unit": "kg CO2e per serving (~250g)",
+      "source": "Poore & Nemecek 2018 (Science) — global average beef",
+      "notes": "Includes land use change, feed, enteric fermentation, processing, and transport."
+    },
+    "lamb": {
+      "factor": 5.6,
+      "unit": "kg CO2e per serving (~250g)",
+      "source": "Poore & Nemecek 2018 (Science) — global average lamb",
+      "notes": "High methane from enteric fermentation. Varies significantly by production system."
+    },
+    "pork": {
+      "factor": 3.0,
+      "unit": "kg CO2e per serving (~250g)",
+      "source": "Poore & Nemecek 2018 (Science) — global average pork",
+      "notes": "Lower than ruminant meats. Includes feed production and manure management."
+    },
+    "chicken": {
+      "factor": 1.7,
+      "unit": "kg CO2e per serving (~250g)",
+      "source": "Poore & Nemecek 2018 (Science) — global average poultry",
+      "notes": "Lowest impact animal protein per serving. Dominated by feed production."
+    },
+    "fish": {
+      "factor": 1.5,
+      "unit": "kg CO2e per serving (~200g)",
+      "source": "Poore & Nemecek 2018 (Science) — global average fish",
+      "notes": "Varies widely: farmed salmon ~3.5, wild-caught whitefish ~1.0. Using weighted average."
+    },
+    "eggs": {
+      "factor": 0.45,
+      "unit": "kg CO2e per serving (~2 eggs, 120g)",
+      "source": "Poore & Nemecek 2018 (Science) — global average eggs",
+      "notes": "Per 2-egg serving. Includes feed, housing, and transport."
+    },
+    "dairy": {
+      "factor": 0.6,
+      "unit": "kg CO2e per serving (~250ml milk equivalent)",
+      "source": "Poore & Nemecek 2018 (Science) — global average dairy",
+      "notes": "Covers milk, yogurt, cheese (normalized to milk equivalent). Cheese is ~3x higher per kg."
+    },
+    "vegetarian_meal": {
+      "factor": 0.5,
+      "unit": "kg CO2e per meal",
+      "source": "Scarborough et al. 2014 — average vegetarian meal",
+      "notes": "Includes dairy and eggs but no meat. Typical meal with grains, vegetables, dairy."
+    },
+    "vegan_meal": {
+      "factor": 0.25,
+      "unit": "kg CO2e per meal",
+      "source": "Scarborough et al. 2014 — average vegan meal",
+      "notes": "Plant-based only. Lowest per-meal footprint. Includes grains, legumes, vegetables."
+    }
+  },
+  "home": {
+    "grid_factors": {
+      "IN": {
+        "factor": 0.708,
+        "unit": "kg CO2e per kWh",
+        "source": "CEA India 2023 — national grid average",
+        "notes": "India's grid is coal-heavy. Varies by state; southern states slightly lower."
+      },
+      "IN-TG": {
+        "factor": 0.708,
+        "unit": "kg CO2e per kWh",
+        "source": "CEA India 2023 — Telangana (uses national average)",
+        "notes": "Telangana grid closely matches national average."
+      },
+      "IN-KA": {
+        "factor": 0.650,
+        "unit": "kg CO2e per kWh",
+        "source": "CEA India 2023 — Karnataka",
+        "notes": "Karnataka has significant hydro and solar capacity, lowering the grid factor."
+      },
+      "IN-MH": {
+        "factor": 0.720,
+        "unit": "kg CO2e per kWh",
+        "source": "CEA India 2023 — Maharashtra",
+        "notes": "Maharashtra relies heavily on coal and gas thermal plants."
+      },
+      "US": {
+        "factor": 0.386,
+        "unit": "kg CO2e per kWh",
+        "source": "US EPA eGRID 2023 — national average",
+        "notes": "US national average. Wide state variation from 0.05 (WA) to 0.8 (WV)."
+      },
+      "US-CA": {
+        "factor": 0.220,
+        "unit": "kg CO2e per kWh",
+        "source": "US EPA eGRID 2023 — California",
+        "notes": "California has aggressive renewables targets, lower grid carbon intensity."
+      },
+      "US-NY": {
+        "factor": 0.280,
+        "unit": "kg CO2e per kWh",
+        "source": "US EPA eGRID 2023 — New York",
+        "notes": "New York benefits from significant nuclear and hydro generation."
+      },
+      "UK": {
+        "factor": 0.207,
+        "unit": "kg CO2e per kWh",
+        "source": "UK BEIS 2023 — UK grid average",
+        "notes": "Declining rapidly due to offshore wind and nuclear. Was 0.5 in 2012."
+      },
+      "EU": {
+        "factor": 0.295,
+        "unit": "kg CO2e per kWh",
+        "source": "EEA 2023 — EU27 average",
+        "notes": "EU average masks large differences. France: 0.052, Poland: 0.65."
+      },
+      "NO": {
+        "factor": 0.019,
+        "unit": "kg CO2e per kWh",
+        "source": "NVE 2023 — Norway grid average",
+        "notes": "Almost entirely hydroelectric. One of the cleanest grids in the world."
+      },
+      "AU": {
+        "factor": 0.650,
+        "unit": "kg CO2e per kWh",
+        "source": "Australian Government NGER 2023",
+        "notes": "Still heavily reliant on coal, though rooftop solar is rapidly growing."
+      },
+      "CA": {
+        "factor": 0.120,
+        "unit": "kg CO2e per kWh",
+        "source": "Environment Canada 2023 — national average",
+        "notes": "Canada benefits from extensive hydro. Provinces vary widely."
+      }
+    },
+    "gas_heating": {
+      "factor": 0.203,
+      "unit": "kg CO2e per kWh (thermal)",
+      "source": "UK BEIS 2023 — natural gas combustion",
+      "notes": "Direct combustion of natural gas for space/water heating."
+    },
+    "water": {
+      "factor": 0.344,
+      "unit": "kg CO2e per cubic meter",
+      "source": "Water UK 2023 — treatment and distribution",
+      "notes": "Includes energy for treatment, pumping, and wastewater processing."
+    }
+  },
+  "consumption": {
+    "smartphone": {
+      "factor": 70,
+      "unit": "kg CO2e per device (amortized over 2 years)",
+      "source": "Apple Environmental Report 2023 / Greenspector 2023",
+      "notes": "Lifecycle emissions including manufacturing, transport, and use. Amortize: ~2.92 kg/month."
+    },
+    "laptop": {
+      "factor": 300,
+      "unit": "kg CO2e per device (amortized over 3 years)",
+      "source": "Dell Product Carbon Footprint / Circular Computing 2023",
+      "notes": "Average laptop lifecycle. Amortize: ~8.33 kg/month. Refurbished saves ~70%."
+    },
+    "clothing_new": {
+      "factor": 25,
+      "unit": "kg CO2e per item (average garment)",
+      "source": "WRAP UK 2023 — average new clothing item",
+      "notes": "Weighted average across garment types. Fast fashion tends higher. Includes raw materials, manufacturing, transport."
+    },
+    "clothing_secondhand": {
+      "factor": 4,
+      "unit": "kg CO2e per item (secondhand garment)",
+      "source": "ThredUp Resale Report 2023",
+      "notes": "Only transport and minor refurbishment. ~84% lower than new. Encourages circular economy."
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2024-12-01",
+    "default_region": "IN",
+    "notes": "All factors are best-effort estimates from peer-reviewed or government sources. Real-world emissions vary by specific product, conditions, and behavior."
+  }
+}
