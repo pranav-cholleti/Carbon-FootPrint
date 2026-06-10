@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AreaChart,
   Area,
@@ -186,6 +186,11 @@ function CustomLegend() {
 // ---------------------------------------------------------------------------
 
 export default function CategoryTrendChart({ data }: CategoryTrendChartProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   if (!data || data.length === 0) {
     return (
       <div
@@ -198,6 +203,24 @@ export default function CategoryTrendChart({ data }: CategoryTrendChartProps) {
         }}
       >
         <p>📊 No trend data yet. Start logging activities to see your trends!</p>
+      </div>
+    );
+  }
+
+  if (!mounted) {
+    return (
+      <div
+        className="card"
+        style={{
+          height: '280px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--text-tertiary)',
+          fontSize: '14px',
+        }}
+      >
+        Loading Trend Chart...
       </div>
     );
   }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, type PieLabelRenderProps } from 'recharts';
 import type { EmissionBreakdown } from '@/types/domain';
 
@@ -68,6 +69,11 @@ function CenterLabel({ viewBox, total }: { viewBox?: { cx: number; cy: number };
 // ---------------------------------------------------------------------------
 
 export default function EmissionRingChart({ data }: EmissionRingChartProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const total = data.transport + data.food + data.home + data.consumption;
 
   // Empty state
@@ -113,9 +119,10 @@ export default function EmissionRingChart({ data }: EmissionRingChartProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
       {/* Chart */}
-      <div style={{ width: '100%', maxWidth: '280px', height: '220px' }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+      <div style={{ width: '100%', maxWidth: '280px', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {mounted ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
             <Pie
               data={chartData}
               cx="50%"
@@ -150,6 +157,11 @@ export default function EmissionRingChart({ data }: EmissionRingChartProps) {
             />
           </PieChart>
         </ResponsiveContainer>
+        ) : (
+          <div style={{ width: '190px', height: '190px', borderRadius: '50%', border: '4px dashed var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '12px' }}>
+            Loading Chart...
+          </div>
+        )}
       </div>
 
       {/* Legend */}

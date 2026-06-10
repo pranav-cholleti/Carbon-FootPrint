@@ -150,6 +150,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function getFutureDateISO(daysOffset: number): string {
+  return new Date(Date.now() + daysOffset * 24 * 60 * 60 * 1000).toISOString();
+}
+
+// ---------------------------------------------------------------------------
 // Page Component
 // ---------------------------------------------------------------------------
 
@@ -181,7 +189,7 @@ export default function SimulatePage() {
       category: scenario.category,
       status: 'active',
       start_date: new Date().toISOString(),
-      end_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+      end_date: getFutureDateISO(90),
     });
 
     setAddedGoals((prev) => new Set(prev).add(scenario.id));

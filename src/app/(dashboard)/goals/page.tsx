@@ -154,8 +154,9 @@ export default function GoalsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Title */}
               <div>
-                <label className="input-label">Goal Title</label>
+                <label htmlFor="goal-title" className="input-label">Goal Title</label>
                 <input
+                  id="goal-title"
                   className="input"
                   type="text"
                   placeholder="e.g., Reduce food emissions by 20%"
@@ -166,8 +167,9 @@ export default function GoalsPage() {
 
               {/* Category */}
               <div>
-                <label className="input-label">Category</label>
+                <label htmlFor="goal-category" className="input-label">Category</label>
                 <select
+                  id="goal-category"
                   className="select"
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value as typeof formCategory)}
@@ -182,10 +184,11 @@ export default function GoalsPage() {
 
               {/* Reduction slider */}
               <div>
-                <label className="input-label">
+                <label htmlFor="goal-reduction" className="input-label">
                   Target Reduction: <strong style={{ color: 'var(--accent-green)', fontSize: '16px' }}>{formReduction}%</strong>
                 </label>
                 <input
+                  id="goal-reduction"
                   type="range"
                   min={5}
                   max={50}
@@ -208,10 +211,11 @@ export default function GoalsPage() {
 
               {/* Timeframe */}
               <div>
-                <label className="input-label">
+                <label htmlFor="goal-timeframe" className="input-label">
                   Timeframe: <strong>{formMonths} month{formMonths > 1 ? 's' : ''}</strong>
                 </label>
                 <input
+                  id="goal-timeframe"
                   type="range"
                   min={1}
                   max={12}

@@ -293,6 +293,8 @@ export default function ActivityLogForm({
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.key}
+                type="button"
+                aria-pressed={category === cat.key}
                 onClick={() => setCategory(cat.key)}
                 style={{
                   display: 'flex',
@@ -338,6 +340,8 @@ export default function ActivityLogForm({
                   {TRANSPORT_MODES.map((mode) => (
                     <button
                       key={mode.key}
+                      type="button"
+                      aria-pressed={transportMode === mode.key}
                       onClick={() => setTransportMode(mode.key)}
                       style={{
                         padding: '10px 6px',
@@ -373,8 +377,9 @@ export default function ActivityLogForm({
               {/* Distance */}
               {(transportMode !== 'bike' && transportMode !== 'walk') || true ? (
                 <div>
-                  <label className="input-label">Distance (km)</label>
+                  <label htmlFor="distance" className="input-label">Distance (km)</label>
                   <input
+                    id="distance"
                     type="number"
                     className="input"
                     placeholder="e.g. 25"
@@ -390,8 +395,9 @@ export default function ActivityLogForm({
               {transportMode === 'car' && (
                 <>
                   <div>
-                    <label className="input-label">Fuel Type</label>
+                    <label htmlFor="fuel-type" className="input-label">Fuel Type</label>
                     <select
+                      id="fuel-type"
                       className="select"
                       value={fuelType}
                       onChange={(e) => setFuelType(e.target.value as FuelType)}
@@ -408,6 +414,8 @@ export default function ActivityLogForm({
                       {[1, 2, 3, 4].map((n) => (
                         <button
                           key={n}
+                          type="button"
+                          aria-pressed={passengers === n}
                           onClick={() => setPassengers(n)}
                           style={{
                             width: '44px',
@@ -447,6 +455,8 @@ export default function ActivityLogForm({
                     {(['short', 'long'] as const).map((t) => (
                       <button
                         key={t}
+                        type="button"
+                        aria-pressed={flightType === t}
                         onClick={() => setFlightType(t)}
                         style={{
                           flex: 1,
@@ -483,8 +493,9 @@ export default function ActivityLogForm({
           {category === 'food' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label className="input-label">Meal Type</label>
+                <label htmlFor="meal-type" className="input-label">Meal Type</label>
                 <select
+                  id="meal-type"
                   className="select"
                   value={foodType}
                   onChange={(e) => setFoodType(e.target.value as FoodType)}
@@ -502,6 +513,8 @@ export default function ActivityLogForm({
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
                       key={n}
+                      type="button"
+                      aria-pressed={servings === n}
                       onClick={() => setServings(n)}
                       style={{
                         width: '44px',
@@ -543,6 +556,8 @@ export default function ActivityLogForm({
                   ]).map((h) => (
                     <button
                       key={h.key}
+                      type="button"
+                      aria-pressed={homeType === h.key}
                       onClick={() => setHomeType(h.key)}
                       style={{
                         flex: 1,
@@ -572,8 +587,9 @@ export default function ActivityLogForm({
                 </div>
               </div>
               <div>
-                <label className="input-label">Amount (kWh)</label>
+                <label htmlFor="energy-amount" className="input-label">Amount (kWh)</label>
                 <input
+                  id="energy-amount"
                   type="number"
                   className="input"
                   placeholder="e.g. 50"
@@ -590,8 +606,9 @@ export default function ActivityLogForm({
           {category === 'consumption' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label className="input-label">Item</label>
+                <label htmlFor="consumption-item" className="input-label">Item</label>
                 <select
+                  id="consumption-item"
                   className="select"
                   value={consumptionItem}
                   onChange={(e) => setConsumptionItem(e.target.value as ConsumptionItem)}
@@ -609,6 +626,8 @@ export default function ActivityLogForm({
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
                       key={n}
+                      type="button"
+                      aria-pressed={itemQuantity === n}
                       onClick={() => setItemQuantity(n)}
                       style={{
                         width: '44px',
@@ -652,8 +671,9 @@ export default function ActivityLogForm({
             }}
           >
             <div>
-              <label className="input-label">Activity Date</label>
+              <label htmlFor="activity-date" className="input-label">Activity Date</label>
               <input
+                id="activity-date"
                 type="date"
                 className="input"
                 value={activityDate}
@@ -662,8 +682,9 @@ export default function ActivityLogForm({
               />
             </div>
             <div>
-              <label className="input-label">Description (optional)</label>
+              <label htmlFor="activity-description" className="input-label">Description (optional)</label>
               <input
+                id="activity-description"
                 type="text"
                 className="input"
                 placeholder="e.g. Morning commute to office"

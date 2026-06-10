@@ -280,8 +280,6 @@ export function calculateBaseline(profile: UserProfile): BaselineResult {
 
   // Public transit
   if (monthlyTransitKm > 0) {
-    const transitSubcategory: TransportSubcategory =
-      profile.transport_primary === 'public_transit' ? 'bus' : 'train';
     // Use a weighted mix: 60% bus, 40% train for "public_transit"
     const busKm = monthlyTransitKm * 0.6;
     const trainKm = monthlyTransitKm * 0.4;

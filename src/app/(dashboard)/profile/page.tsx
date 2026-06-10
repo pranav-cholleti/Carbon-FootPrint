@@ -12,7 +12,6 @@ import {
   Trash2,
   LogOut,
   Bell,
-  BellOff,
   ChevronRight,
   Shield,
 } from 'lucide-react';
@@ -226,8 +225,9 @@ export default function ProfilePage() {
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <label className="input-label">Display Name</label>
+              <label htmlFor="display-name" className="input-label">Display Name</label>
               <input
+                id="display-name"
                 className="input"
                 type="text"
                 value={displayName}
@@ -235,10 +235,11 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="input-label">
+              <label htmlFor="profile-email" className="input-label">
                 <Mail size={12} style={{ display: 'inline', verticalAlign: 'text-bottom' }} /> Email (read-only)
               </label>
               <input
+                id="profile-email"
                 className="input"
                 type="email"
                 value={email}
@@ -247,10 +248,11 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="input-label">
+              <label htmlFor="profile-region" className="input-label">
                 <MapPin size={12} style={{ display: 'inline', verticalAlign: 'text-bottom' }} /> Region
               </label>
               <select
+                id="profile-region"
                 className="select"
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
@@ -263,10 +265,11 @@ export default function ProfilePage() {
               </select>
             </div>
             <div>
-              <label className="input-label">
+              <label htmlFor="household-size" className="input-label">
                 <Users size={12} style={{ display: 'inline', verticalAlign: 'text-bottom' }} /> Household Size
               </label>
               <input
+                id="household-size"
                 className="input"
                 type="number"
                 min={1}
@@ -525,6 +528,9 @@ function ToggleRow({
         <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{sublabel}</div>
       </div>
       <button
+        type="button"
+        aria-pressed={value}
+        aria-label={label}
         onClick={() => onChange(!value)}
         style={{
           width: '44px',

@@ -108,7 +108,6 @@ export function getAlternativeComparison(subcategory: Subcategory, co2e_kg: numb
     ev: () =>
       `Already one of the cleanest options! This is ${Math.round(co2e_kg / 0.170 * 100 / (co2e_kg / 0.053))}% of what a petrol car would emit`,
     flight_short: () => {
-      const trainEquiv = Math.round(co2e_kg / 0.041);
       return `A train covering the same distance would emit ~${formatDecimal(co2e_kg * 0.041 / 0.255)} kg — ${Math.round((1 - 0.041 / 0.255) * 100)}% less`;
     },
     flight_long: () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ScatterChart,
   Scatter,
@@ -183,6 +183,11 @@ function CustomLegend() {
 // ---------------------------------------------------------------------------
 
 export default function EffortImpactMatrix({ actions }: EffortImpactMatrixProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const maxImpact = Math.max(...actions.map((a) => a.impact), 15);
   const midEffort = 3;
   const midImpact = maxImpact / 2;
@@ -196,7 +201,9 @@ export default function EffortImpactMatrix({ actions }: EffortImpactMatrixProps)
           width: '100%',
         }}
       >
-        <ResponsiveContainer width="100%" height={320}>
+        {mounted ? (
+          <>
+          <ResponsiveContainer width="100%" height={320}>
           <ScatterChart
             margin={{ top: 20, right: 20, bottom: 20, left: 10 }}
           >
@@ -372,6 +379,23 @@ export default function EffortImpactMatrix({ actions }: EffortImpactMatrixProps)
         >
           Skip for Now
         </div>
+        </>
+        ) : (
+          <div
+            style={{
+              height: '320px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-tertiary)',
+              border: '1px dashed var(--border-light)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '13px',
+            }}
+          >
+            Loading Matrix...
+          </div>
+        )}
       </div>
     </div>
   );

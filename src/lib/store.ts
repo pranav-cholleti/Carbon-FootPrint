@@ -62,11 +62,6 @@ function setItem<T>(key: string, value: T): void {
   }
 }
 
-function removeItem(key: string): void {
-  if (!isBrowser()) return;
-  localStorage.removeItem(key);
-}
-
 // ---------------------------------------------------------------------------
 // ID generation
 // ---------------------------------------------------------------------------

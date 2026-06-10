@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Leaf,
   ArrowLeft,
   ArrowRight,
   Sparkles,
-  ChevronRight,
 } from 'lucide-react';
 
 /* ──────────────────── Types ──────────────────── */
@@ -98,6 +97,7 @@ function OptionButton({
   return (
     <button
       type="button"
+      aria-pressed={selected}
       onClick={onClick}
       className="flex items-center gap-3 w-full text-left px-4 py-3.5 rounded-xl"
       style={{
@@ -152,7 +152,6 @@ const TOTAL_STEPS = 4;
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [animDirection, setAnimDirection] = useState<'forward' | 'backward'>('forward');
 
   // Step 1: Transport
   const [transport, setTransport] = useState<TransportData>({
@@ -210,14 +209,12 @@ export default function OnboardingPage() {
 
   const goNext = () => {
     if (step < TOTAL_STEPS) {
-      setAnimDirection('forward');
       setStep((s) => s + 1);
     }
   };
 
   const goBack = () => {
     if (step > 1) {
-      setAnimDirection('backward');
       setStep((s) => s - 1);
     }
   };
@@ -608,8 +605,9 @@ function TransportStep({
           </div>
 
           <div>
-            <label className="input-label">Weekly driving distance (km)</label>
+            <label htmlFor="weekly-km" className="input-label">Weekly driving distance (km)</label>
             <input
+              id="weekly-km"
               type="number"
               className="input"
               value={data.weeklyKm || ''}
@@ -637,8 +635,9 @@ function TransportStep({
 
         <div className="space-y-4">
           <div>
-            <label className="input-label">Flights per year</label>
+            <label htmlFor="flights-per-year" className="input-label">Flights per year</label>
             <input
+              id="flights-per-year"
               type="number"
               className="input"
               value={data.flightsPerYear || ''}
@@ -747,8 +746,9 @@ function HomeStep({
       {/* Number inputs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="input-label">Home area (m²) — optional</label>
+          <label htmlFor="home-area" className="input-label">Home area (m²) — optional</label>
           <input
+            id="home-area"
             type="number"
             className="input"
             value={data.homeAreaM2 || ''}
@@ -760,8 +760,9 @@ function HomeStep({
           />
         </div>
         <div>
-          <label className="input-label">Monthly energy usage (kWh)</label>
+          <label htmlFor="monthly-energy" className="input-label">Monthly energy usage (kWh)</label>
           <input
+            id="monthly-energy"
             type="number"
             className="input"
             value={data.monthlyEnergyKwh || ''}

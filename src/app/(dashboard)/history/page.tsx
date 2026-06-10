@@ -295,6 +295,7 @@ export default function HistoryPage() {
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value as EmissionCategory | 'all')}
             style={{ width: 'auto', minWidth: '140px', fontSize: '13px', padding: '8px 32px 8px 10px' }}
+            aria-label="Filter by Category"
           >
             <option value="all">All Categories</option>
             <option value="transport">🚗 Transport</option>
@@ -315,6 +316,7 @@ export default function HistoryPage() {
             onChange={(e) => setStartDate(e.target.value)}
             style={{ width: 'auto', fontSize: '13px', padding: '8px 10px' }}
             placeholder="From"
+            aria-label="Start Date"
           />
           <span style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>—</span>
           <input
@@ -325,6 +327,7 @@ export default function HistoryPage() {
             style={{ width: 'auto', fontSize: '13px', padding: '8px 10px' }}
             placeholder="To"
             max={new Date().toISOString().substring(0, 10)}
+            aria-label="End Date"
           />
         </div>
 
