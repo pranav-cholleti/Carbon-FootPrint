@@ -681,6 +681,162 @@
       "pct": 100
     }
   },
+  "C:\\Users\\roshi\\Downloads\\Carbon-FootPrint\\Pranav_Carbon-Footprint\\src\\components\\onboarding\\ConsumptionStep.tsx": {
+    "lines": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "C:\\Users\\roshi\\Downloads\\Carbon-FootPrint\\Pranav_Carbon-Footprint\\src\\components\\onboarding\\FoodStep.tsx": {
+    "lines": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "C:\\Users\\roshi\\Downloads\\Carbon-FootPrint\\Pranav_Carbon-Footprint\\src\\components\\onboarding\\HomeStep.tsx": {
+    "lines": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "C:\\Users\\roshi\\Downloads\\Carbon-FootPrint\\Pranav_Carbon-Footprint\\src\\components\\onboarding\\OptionButton.tsx": {
+    "lines": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "C:\\Users\\roshi\\Downloads\\Carbon-FootPrint\\Pranav_Carbon-Footprint\\src\\components\\onboarding\\TransportStep.tsx": {
+    "lines": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "C:\\Users\\roshi\\Downloads\\Carbon-FootPrint\\Pranav_Carbon-Footprint\\src\\lib\\actions-engine\\library.ts": {
+    "lines": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 100,
+      "covered": 100,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 10,
+      "covered": 10,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
   "C:\\Users\\roshi\\Downloads\\Carbon-FootPrint\\Pranav_Carbon-Footprint\\src\\lib\\actions-engine\\ranker.ts": {
     "lines": {
       "total": 100,
